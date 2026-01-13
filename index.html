@@ -51,6 +51,106 @@
             padding: 20px 40px; font-size: 1.5rem; background: var(--neon-blue);
             border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
         }
+        // 1. Asset Loader (Plug in your 'lifted' images here)
+const imgBziz = new Image(); 
+imgBziz.src = 'bziz_kart.png'; // Your screenshot from Sora
+const imgMishmish = new Image(); 
+imgMishmish.src = 'mishmish_cheese.png'; // The 'Cheee Cruiser'
+
+// 2. Updated Player Class
+class Player {
+    constructor(character) {
+        this.y = 0;
+        this.vy = 0;
+        this.character = character; // 'bziz' or 'mishmish'
+        this.img = (character === 'bziz') ? imgBziz : imgMishmish;
+    }
+
+    draw() {
+        // Draw the high-res lifted sprite
+        ctx.drawImage(this.img, 50, this.y - 80, 100, 80);
+    }
+}
+
+// 3. Snail "Slow-Mo" Mechanic
+function triggerSnailMode() {
+    isSlowMo = true;
+    currentSpeed = 2; // Slow down for easy sprite viewing
+    visualShout("SNAIL TIME! 🐌");
+    
+    // Canvas Filter for that Arcade Glow
+    canvas.style.filter = "contrast(1.5) brightness(1.2) sepia(0.3)";
+    
+    setTimeout(() => {
+        isSlowMo = false;
+        currentSpeed = 10;
+        canvas.style.filter = "none";
+        visualShout("VROOM!");
+    }, 4000);
+}
+// Add to your game state
+let isSlowMo = false;
+
+function triggerSlowMo() {
+    isSlowMo = true;
+    speed = speed / 2; // Cut speed in half
+    visualShout("S-L-O-W-W-W..."); 
+    
+    // Return to normal after 5 seconds
+    setTimeout(() => {
+        isSlowMo = false;
+        speed = speed * 2;
+        visualShout("VROOM!");
+    }, 5000);
+}
+
+// Update your obstacle collision logic
+if (o.type === '🐌') { // The Snail from the video
+    triggerSlowMo();
+    obstacles.splice(i, 1);
+}
+// Add these to your Player class in the script
+class Player {
+    constructor() {
+        this.y = 0;
+        this.vy = 0;
+        this.size = 60;
+        this.mode = 'running'; // 'running' or 'riding'
+        this.emoji = "🐈"; 
+    }
+
+    toggleMode() {
+        this.mode = (this.mode === 'running') ? 'riding' : 'running';
+        this.emoji = (this.mode === 'running') ? "🐈" : "🏎️";
+        visualShout(this.mode === 'riding' ? "VROOM!" : "SPRINT!");
+    }
+
+    update() {
+        this.y += this.vy;
+        // Karts are heavier, so they fall faster
+        let gravity = (this.mode === 'riding') ? 1.2 : 0.8;
+        
+        if (this.y < roadY) this.vy += gravity;
+        else { this.y = roadY; this.vy = 0; }
+    }
+}
+
+// Background Parallax logic
+let bgX = 0;
+function drawBackground() {
+    // Distant Mountains (Ketama)
+    ctx.fillStyle = "#1a3311"; // Dark Mountain Green
+    for (let i = 0; i < 3; i++) {
+        let x = (bgX * 0.2) + (i * w);
+        ctx.beginPath();
+        ctx.moveTo(x, roadY);
+        ctx.lineTo(x + w/2, roadY - 150);
+        ctx.lineTo(x + w, roadY);
+        ctx.fill();
+    }
+    bgX -= 2; // Slow move for distance
+}
+
     </style>
 </head>
 <body>
