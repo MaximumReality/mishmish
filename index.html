@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MAXIMUM REALITY: WORLD TOUR</title>
+    <style>
+        :root {
+            --marrakech-red: #e2725b;
+            --ketama-green: #2d5a27;
+            --neon-blue: #00ffff;
+        }
+        body { 
+            margin: 0; background: #000; color: #fff; 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            overflow: hidden; touch-action: none; 
+            width: 100vw; height: 100vh;
+        }
+        /* Handle iPhone Notch/Dynamic Island */
+        #game-container { position: relative; width: 100%; height: 100%; padding-top: env(safe-area-inset-top); }
+        
+        canvas { display: block; width: 100%; height: 100%; background: linear-gradient(#050510, #111); }
+        
+        #ui { 
+            position: absolute; top: calc(20px + env(safe-area-inset-top)); 
+            width: 100%; display: flex; justify-content: space-between; 
+            padding: 0 20px; box-sizing: border-box; z-index: 10;
+            font-weight: 900; font-size: 1.2rem; pointer-events: none;
+        }
+
+        #overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; z-index: 100; backdrop-filter: blur(5px);
+        }
+
+        .shout {
+            position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3rem; font-weight: 900; color: #ff00ff;
+            text-shadow: 3px 3px #00ffff; pointer-events: none; z-index: 50;
+            animation: popOut 0.5s ease-out forwards;
+        }
+
+        @keyframes popOut {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { opacity: 1; transform: translate(-50%, -60%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+        }
+
+        .btn-start {
+            padding: 20px 40px; font-size: 1.5rem; background: var(--neon-blue);
+            border: none; border-radius: 50px; font-weight: bold; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui">
+    <div style="color: var(--neon-blue);">LOC: <span id="location">MARRAKECH</span></div>
+    <div style="color: #ff00ff;">SCORE: <span id="score">0</span></div>
+</div>
+
+<div id="overlay">
+    <h1 style="color: var(--marrakech-red); font-size: 3rem;">MAXIMUM REALITY</h1>
+    <p>MISHMISH & BZIZ: THE RESCUE</p>
+    <button class="btn-start" onclick="startGame()">START MISSION</button>
+</div>
+
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let w, h, roadY;
+let gameActive = false;
+let score = 0;
+let flashOpacity = 0;
+
+// Game State Classes
+class Player {
+    constructor() {
+        this.y = 0;
+        this.vy = 0;
+        this.size = 60;
+        this.emoji = "🐈"; // Default Bziz
+    }
+    update() {
+        this.y += this.vy;
+        if (this.y < roadY) this.vy += 0.8; // Gravity
+        else { this.y = roadY; this.vy = 0; }
+    }
+    draw() {
+        ctx.font = `${this.size}px serif`;
+        ctx.fillText(this.emoji, 50, this.y - 10);
+    }
+}
+
+const player = new Player();
+
+function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    roadY = h * 0.75;
+    player.y = roadY;
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+// Visual Feedback (For our Deaf Creator)
+function visualShout(text) {
+    const div = document.createElement('div');
+    div.className = 'shout';
+    div.innerText = text;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 600);
+    flashOpacity = 0.3; // Flash the screen blue/red
+}
+
+function startGame() {
+    document.getElementById('overlay').style.display = 'none';
+    gameActive = true;
+    score = 0;
+    visualShout("YALLAH!"); 
+}
+
+// Touch to Jump
+window.addEventListener('touchstart', () => {
+    if (gameActive && player.y >= roadY) player.vy = -18;
+});
+
+function draw() {
+    // Clear & Background
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(0, 0, w, h);
+
+    // Draw Road (Marrakech Red)
+    ctx.fillStyle = "#e2725b";
+    ctx.fillRect(0, roadY, w, h - roadY);
+
+    if (gameActive) {
+        score++;
+        player.update();
+        document.getElementById('score').innerText = score;
+
+        // Random Shout Testing
+        if(score % 200 === 0) visualShout("KHREJ-HA!");
+    }
+
+    player.draw();
+
+    // Visual Flash Overlay
+    if (flashOpacity > 0) {
+        ctx.fillStyle = `rgba(0, 255, 255, ${flashOpacity})`;
+        ctx.fillRect(0,0,w,h);
+        flashOpacity -= 0.02;
+    }
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
